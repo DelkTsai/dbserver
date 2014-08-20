@@ -115,13 +115,14 @@ public class ThreadPool {
 			}
 			workSize = WorkerQueue.getInstance().getWorkSize();
 		}
-		for (WorkerThread t : pool) {
-			if (t.getStatus() == WorkerThread.IDLE) {
-				t.release();
+		while (idleCount < threadNum) {
+			for (WorkerThread t : pool) {
+				if (t.getStatus() == WorkerThread.IDLE) {
+					t.release();
+				}
 			}
 		}
 		logger.log(Level.INFO, "threadPool shutdown ok");
 
 	}
-
 }
