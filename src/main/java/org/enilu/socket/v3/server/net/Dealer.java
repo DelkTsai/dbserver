@@ -14,7 +14,7 @@ import org.enilu.socket.v3.commons.model.MsgHeader;
 import org.enilu.socket.v3.commons.model.MsgSender;
 import org.enilu.socket.v3.commons.util.ByteUtil;
 import org.enilu.socket.v3.commons.util.Constants;
-import org.enilu.socket.v3.server.threadpool.ServiceWorker;
+import org.enilu.socket.v3.server.service.ServiceWorker;
 import org.enilu.socket.v3.server.threadpool.WorkerQueue;
 
 /**
@@ -73,7 +73,7 @@ public class Dealer {
 			 * 对方关闭了SocketChannel 所以服务器这边也要关闭
 			 */
 			try {
-				logger.log(Level.INFO, "客户端关闭了连接");
+				logger.log(Level.INFO, "client disconnected");
 				channel.close();
 				for (int index = 0, length = clientChannels.size(); index < length; index++) {
 					if (clientChannels.get(index).equals(channel)) {

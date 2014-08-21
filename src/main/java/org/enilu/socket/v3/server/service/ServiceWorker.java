@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.enilu.socket.v3.server.threadpool;
+package org.enilu.socket.v3.server.service;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,10 +13,7 @@ import org.enilu.socket.v3.commons.model.MsgHeader;
 import org.enilu.socket.v3.commons.model.MsgReplay;
 import org.enilu.socket.v3.commons.model.MsgSender;
 import org.enilu.socket.v3.commons.util.Constants;
-import org.enilu.socket.v3.server.service.DeleteService;
-import org.enilu.socket.v3.server.service.InsertService;
-import org.enilu.socket.v3.server.service.QueryService;
-import org.enilu.socket.v3.server.service.UpdateService;
+import org.enilu.socket.v3.server.threadpool.Worker;
 
 /**
  * 服务器端服务类
@@ -38,7 +35,8 @@ public class ServiceWorker extends Worker {
 
 	@Override
 	public String work() {
-		logger.log(Level.INFO, "accept from client：" + sender.toString());
+		logger.log(Level.INFO, "accept from client："
+				+ sender.getHeader().getSequence());
 		int opCode = sender.getHeader().getOpCode();
 		MsgReplay replay = null;
 		switch (opCode) {
@@ -59,13 +57,18 @@ public class ServiceWorker extends Worker {
 		}
 		ByteBuffer bufferSender = ByteBuffer.wrap(replay.getBytes());
 		try {
-			logger.log(Level.INFO,
-					"send message to client：" + replay.toString());
+			logger.log(Level.INFO, "send message to client："
+					+ replay.getHeader().getSequence());
 			socket.write(bufferSender);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return super.toString();
 	}
 
 }

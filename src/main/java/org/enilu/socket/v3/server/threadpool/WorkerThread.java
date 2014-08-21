@@ -14,8 +14,9 @@ import org.enilu.socket.v3.commons.util.Constants;
 public class WorkerThread extends Thread {
 	private static Logger logger = Logger.getLogger(WorkerThread.class
 			.getName());
-	public static final int IDLE = 0;
-	public static final int BUSY = 1;
+	protected static final int IDLE = 0;
+	protected static final int BUSY = 1;
+	protected static final int CLOSED = 2;
 	private int id;// 线程id
 	private int status;// 0:idle,1:busy
 	private boolean isRunning = true;
@@ -33,32 +34,30 @@ public class WorkerThread extends Thread {
 		return status;
 	}
 
-	public void setStatus(int status) {
-		this.status = status;
-	}
-
 	public Worker getWorker() {
 		return worker;
 	}
 
-	public void setWorker(Worker worker) {
+	public synchronized void startWorker(Worker worker) {
 		this.worker = worker;
+		notify();
 	}
 
 	@Override
-	public void run() {
+	public synchronized void run() {
 		while (isRunning) {
 			if (this.status == WorkerThread.IDLE && this.worker != null) {
 				this.status = WorkerThread.BUSY;
 				logger.log(Level.INFO, "Thread " + id + "start work");
 				this.worker.work();
+
 				this.status = WorkerThread.IDLE;
 				this.worker = null;
-				ThreadPool.getTheadPool().returnThread();
 			} else {
 				try {
-					Thread.sleep(500);
+					wait();
 				} catch (InterruptedException e) {
+
 					e.printStackTrace();
 				}
 			}
@@ -68,8 +67,16 @@ public class WorkerThread extends Thread {
 	/**
 	 * 清出先撑资源，关闭线程
 	 */
-	public void release() {
-		isRunning = false;
+	public synchronized void release() {
+		if (this.getStatus() != WorkerThread.CLOSED) {
+			isRunning = false;
+			if (this.getStatus() == WorkerThread.IDLE) {
+				this.status = WorkerThread.CLOSED;
+				notify();
+
+			}
+		}
+
 	}
 
 }

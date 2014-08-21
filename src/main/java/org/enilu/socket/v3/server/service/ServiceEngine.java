@@ -69,17 +69,18 @@ public class ServiceEngine {
 
 		@Override
 		public void run() {
-
-			while (true) {
-				Worker worker = WorkerQueue.getInstance().take();
-				if ("shutdown".equals(worker.work())) {
+			WorkerQueue workerQueue = WorkerQueue.getInstance();
+			Worker worker = null;
+			while ((worker = workerQueue.take()) != null) {
+				// Worker worker = WorkerQueue.getInstance().take();
+				if ("shutdown".equals(worker.toString())) {
 					isRunning = false;
 					break;
 				}
 				WorkerThread thread = threadPool.get();
 				logger.log(Level.INFO, "start thread:" + thread.getId()
 						+ " start a work");
-				thread.setWorker(worker);
+				thread.startWorker(worker);
 			}
 
 		}

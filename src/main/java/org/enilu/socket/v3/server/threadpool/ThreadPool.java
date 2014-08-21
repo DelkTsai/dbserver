@@ -19,8 +19,6 @@ public class ThreadPool {
 	private static ThreadPool instance;
 	private static List<WorkerThread> pool = new ArrayList<WorkerThread>();// 线程队列
 	private static int threadNum = 10;
-	private static int idleCount = 0;
-	private static int busyCount = 0;
 
 	private ThreadPool() {
 		logger.setLevel(Constants.log_level);
@@ -39,7 +37,6 @@ public class ThreadPool {
 			instance = new ThreadPool();
 			threadNum = num;
 			for (int i = 0; i < num; i++) {
-				idleCount++;
 				WorkerThread wt = new WorkerThread(i);
 				wt.start();
 				pool.add(wt);
@@ -48,7 +45,6 @@ public class ThreadPool {
 		}
 		int xiangchaNum = num > threadNum ? (num - threadNum) : 0;
 		for (int i = 0; i < xiangchaNum; i++) {
-			idleCount++;
 			WorkerThread wt = new WorkerThread(i);
 			wt.start();
 			pool.add(wt);
@@ -64,18 +60,6 @@ public class ThreadPool {
 	 */
 	public static ThreadPool getTheadPool() {
 		return getThreadPool(50);// 默认生成50个线程
-	}
-
-	/**
-	 * 修改线程状态计数器
-	 * 
-	 * @param thread
-	 */
-	public void returnThread() {
-		synchronized (this) {
-			idleCount++;
-			busyCount--;
-		}
 	}
 
 	public WorkerThread get() {
@@ -94,11 +78,35 @@ public class ThreadPool {
 	}
 
 	public int getIdleCount() {
+		int idleCount = 0;
+		for (WorkerThread t : pool) {
+			if (t.getStatus() == WorkerThread.IDLE) {
+				idleCount++;
+			}
+		}
 		return idleCount;
 	}
 
 	public int getBusyCount() {
+		int busyCount = 0;
+		for (WorkerThread t : pool) {
+			if (t.getStatus() == WorkerThread.BUSY) {
+				busyCount++;
+			}
+		}
 		return busyCount;
+	}
+
+	public int getClosedCount() {
+
+		int count = 0;
+		for (WorkerThread t : pool) {
+			if (t.getStatus() == WorkerThread.CLOSED) {
+				count++;
+			}
+		}
+		return count;
+
 	}
 
 	/**
@@ -109,13 +117,13 @@ public class ThreadPool {
 		int workSize = WorkerQueue.getInstance().getWorkSize();
 		while (workSize > 0) {
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			workSize = WorkerQueue.getInstance().getWorkSize();
 		}
-		while (idleCount < threadNum) {
+		while (this.getClosedCount() < threadNum) {
 			for (WorkerThread t : pool) {
 				if (t.getStatus() == WorkerThread.IDLE) {
 					t.release();

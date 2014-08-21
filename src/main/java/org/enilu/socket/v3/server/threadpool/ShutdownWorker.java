@@ -19,4 +19,9 @@ public class ShutdownWorker extends Worker {
 
 	}
 
+	@Override
+	public String toString() {
+		return "shutdown";
+	}
+
 }

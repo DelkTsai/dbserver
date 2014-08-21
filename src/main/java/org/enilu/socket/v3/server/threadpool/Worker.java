@@ -8,4 +8,8 @@ package org.enilu.socket.v3.server.threadpool;
  */
 public abstract class Worker {
 	public abstract String work();
+
+	public String toString() {
+		return super.toString();
+	};
 }
