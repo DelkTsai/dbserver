@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.enilu.socket.v3.server.service;
+package org.enilu.socket.v3.server.threadpool.task;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,21 +13,27 @@ import org.enilu.socket.v3.commons.model.MsgHeader;
 import org.enilu.socket.v3.commons.model.MsgReplay;
 import org.enilu.socket.v3.commons.model.MsgSender;
 import org.enilu.socket.v3.commons.util.Constants;
-import org.enilu.socket.v3.server.threadpool.Worker;
+import org.enilu.socket.v3.server.service.DeleteService;
+import org.enilu.socket.v3.server.service.InsertService;
+import org.enilu.socket.v3.server.service.QueryService;
+import org.enilu.socket.v3.server.service.UpdateService;
 
 /**
- * 服务器端服务类
+ * 处理客户请求的任务类
+ * <p>
+ * <li>根据客户请求类型调用不同的service来进行业务处理</li>
+ * <li>获取service的处理结果返回给客户端</li>
  * 
- * @author enilu
+ * @author enilu(82552623@qq.com)
  * 
  */
-public class ServiceWorker extends Worker {
-	private static Logger logger = Logger.getLogger(ServiceWorker.class
-			.getName());
+public class ServiceTask extends Task {
+	private static Logger logger = Logger
+			.getLogger(ServiceTask.class.getName());
 	private final MsgSender sender;
 	private final SocketChannel socket;
 
-	public ServiceWorker(SocketChannel socket, MsgSender sender) {
+	public ServiceTask(SocketChannel socket, MsgSender sender) {
 		logger.setLevel(Constants.log_level);
 		this.sender = sender;
 		this.socket = socket;

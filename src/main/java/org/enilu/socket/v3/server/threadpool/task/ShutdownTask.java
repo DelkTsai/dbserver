@@ -1,4 +1,4 @@
-package org.enilu.socket.v3.server.threadpool;
+package org.enilu.socket.v3.server.threadpool.task;
 
 /**
  * 服务器停止worker
@@ -11,7 +11,7 @@ package org.enilu.socket.v3.server.threadpool;
  * @author enilu(82552623@qq.com)
  * 
  */
-public class ShutdownWorker extends Worker {
+public class ShutdownTask extends Task {
 
 	@Override
 	public String work() {
@@ -20,6 +20,9 @@ public class ShutdownWorker extends Worker {
 	}
 
 	@Override
+	/**
+	 * 必须返回shutdown字符串，以便ServiceEngine
+	 */
 	public String toString() {
 		return "shutdown";
 	}

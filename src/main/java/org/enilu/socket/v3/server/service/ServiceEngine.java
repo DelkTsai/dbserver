@@ -3,13 +3,13 @@ package org.enilu.socket.v3.server.service;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.enilu.socket.v3.server.threadpool.TaskQueue;
+import org.enilu.socket.v3.server.threadpool.TaskThread;
 import org.enilu.socket.v3.server.threadpool.ThreadPool;
-import org.enilu.socket.v3.server.threadpool.Worker;
-import org.enilu.socket.v3.server.threadpool.WorkerQueue;
-import org.enilu.socket.v3.server.threadpool.WorkerThread;
+import org.enilu.socket.v3.server.threadpool.task.Task;
 
 /**
- * 后台服务类，从worker队列中获取任务，并从线程池中获取线程进行处理
+ * 后台服务类，从task队列中获取任务，并从线程池中获取线程进行处理
  * <p>
  * 
  * @author enilu(82552623@qq.com)
@@ -33,8 +33,8 @@ public class ServiceEngine {
 
 			logger.log(Level.INFO, "bootstrap serviceEngine");
 			threadPool = ThreadPool.getThreadPool(50);
-			Task task = new Task();
-			new Thread(task).start();
+			Job job = new Job();
+			new Thread(job).start();
 
 		}
 		return instance;
@@ -62,25 +62,24 @@ public class ServiceEngine {
 	 * @author enilu
 	 * 
 	 */
-	static class Task implements Runnable {
-		public Task() {
+	static class Job implements Runnable {
+		public Job() {
 			super();
 		}
 
 		@Override
 		public void run() {
-			WorkerQueue workerQueue = WorkerQueue.getInstance();
-			Worker worker = null;
-			while ((worker = workerQueue.take()) != null) {
-				// Worker worker = WorkerQueue.getInstance().take();
-				if ("shutdown".equals(worker.toString())) {
+			TaskQueue taskQueue = TaskQueue.getInstance();
+			Task task = null;
+			while ((task = taskQueue.take()) != null) {
+				if ("shutdown".equals(task.toString())) {
 					isRunning = false;
 					break;
 				}
-				WorkerThread thread = threadPool.get();
-				logger.log(Level.INFO, "start thread:" + thread.getId()
-						+ " start a work");
-				thread.startWorker(worker);
+				TaskThread thread = threadPool.get();
+				logger.log(Level.INFO, "thread:" + thread.getId()
+						+ " start a task");
+				thread.startTask(task);
 			}
 
 		}

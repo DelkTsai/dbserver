@@ -8,6 +8,9 @@ import org.enilu.socket.v3.commons.model.MsgSender;
 
 /**
  * 查询服务类
+ * <p>
+ * 2014年8月6日
+ * <p>
  * 
  * @author enilu(82552623@qq.com)
  * 

@@ -8,16 +8,16 @@ import java.util.logging.Logger;
 import org.enilu.socket.v3.commons.util.Constants;
 
 /**
- * 线程池
+ * 线程池管理类
  * 
- * @author enilu
+ * @author enilu(82552623@qq.com)
  * 
  */
 public class ThreadPool {
 
 	private static Logger logger = Logger.getLogger(ThreadPool.class.getName());
 	private static ThreadPool instance;
-	private static List<WorkerThread> pool = new ArrayList<WorkerThread>();// 线程队列
+	private static List<TaskThread> pool = new ArrayList<TaskThread>();// 线程队列
 	private static int threadNum = 10;
 
 	private ThreadPool() {
@@ -37,7 +37,7 @@ public class ThreadPool {
 			instance = new ThreadPool();
 			threadNum = num;
 			for (int i = 0; i < num; i++) {
-				WorkerThread wt = new WorkerThread(i);
+				TaskThread wt = new TaskThread(i);
 				wt.start();
 				pool.add(wt);
 			}
@@ -45,7 +45,7 @@ public class ThreadPool {
 		}
 		int xiangchaNum = num > threadNum ? (num - threadNum) : 0;
 		for (int i = 0; i < xiangchaNum; i++) {
-			WorkerThread wt = new WorkerThread(i);
+			TaskThread wt = new TaskThread(i);
 			wt.start();
 			pool.add(wt);
 		}
@@ -62,12 +62,12 @@ public class ThreadPool {
 		return getThreadPool(50);// 默认生成50个线程
 	}
 
-	public WorkerThread get() {
+	public TaskThread get() {
 		synchronized (this) {
-			WorkerThread thread = null;
+			TaskThread thread = null;
 			while (thread == null) {
-				for (WorkerThread t : pool) {
-					if (t.getStatus() == WorkerThread.IDLE) {
+				for (TaskThread t : pool) {
+					if (t.getStatus() == TaskThread.IDLE) {
 						thread = t;
 					}
 				}
@@ -79,8 +79,8 @@ public class ThreadPool {
 
 	public int getIdleCount() {
 		int idleCount = 0;
-		for (WorkerThread t : pool) {
-			if (t.getStatus() == WorkerThread.IDLE) {
+		for (TaskThread t : pool) {
+			if (t.getStatus() == TaskThread.IDLE) {
 				idleCount++;
 			}
 		}
@@ -89,8 +89,8 @@ public class ThreadPool {
 
 	public int getBusyCount() {
 		int busyCount = 0;
-		for (WorkerThread t : pool) {
-			if (t.getStatus() == WorkerThread.BUSY) {
+		for (TaskThread t : pool) {
+			if (t.getStatus() == TaskThread.BUSY) {
 				busyCount++;
 			}
 		}
@@ -100,8 +100,8 @@ public class ThreadPool {
 	public int getClosedCount() {
 
 		int count = 0;
-		for (WorkerThread t : pool) {
-			if (t.getStatus() == WorkerThread.CLOSED) {
+		for (TaskThread t : pool) {
+			if (t.getStatus() == TaskThread.CLOSED) {
 				count++;
 			}
 		}
@@ -114,18 +114,18 @@ public class ThreadPool {
 	 */
 	public void shutdown() {
 		logger.log(Level.INFO, "threadPool shutdown...");
-		int workSize = WorkerQueue.getInstance().getWorkSize();
-		while (workSize > 0) {
+		int taskSize = TaskQueue.getInstance().getTaskSize();
+		while (taskSize > 0) {
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			workSize = WorkerQueue.getInstance().getWorkSize();
+			taskSize = TaskQueue.getInstance().getTaskSize();
 		}
 		while (this.getClosedCount() < threadNum) {
-			for (WorkerThread t : pool) {
-				if (t.getStatus() == WorkerThread.IDLE) {
+			for (TaskThread t : pool) {
+				if (t.getStatus() == TaskThread.IDLE) {
 					t.release();
 				}
 			}

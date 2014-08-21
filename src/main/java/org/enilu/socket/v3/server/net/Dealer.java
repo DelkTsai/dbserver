@@ -14,8 +14,8 @@ import org.enilu.socket.v3.commons.model.MsgHeader;
 import org.enilu.socket.v3.commons.model.MsgSender;
 import org.enilu.socket.v3.commons.util.ByteUtil;
 import org.enilu.socket.v3.commons.util.Constants;
-import org.enilu.socket.v3.server.service.ServiceWorker;
-import org.enilu.socket.v3.server.threadpool.WorkerQueue;
+import org.enilu.socket.v3.server.threadpool.TaskQueue;
+import org.enilu.socket.v3.server.threadpool.task.ServiceTask;
 
 /**
  * 类说明：数据接收和转发，Socket连接请求处理类
@@ -140,8 +140,8 @@ public class Dealer {
 					msgSender.setData(ByteUtil.byteToJsonString(temp2));
 
 					// 向客户端返回数据
-					ServiceWorker work = new ServiceWorker(channel, msgSender);
-					WorkerQueue.getInstance().push(work);
+					ServiceTask task = new ServiceTask(channel, msgSender);
+					TaskQueue.getInstance().push(task);
 
 				} catch (IOException e) {
 					/**

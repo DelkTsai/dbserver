@@ -14,8 +14,8 @@ import java.util.logging.Logger;
 
 import org.enilu.socket.v3.commons.util.Constants;
 import org.enilu.socket.v3.server.service.ServiceEngine;
-import org.enilu.socket.v3.server.threadpool.ShutdownWorker;
-import org.enilu.socket.v3.server.threadpool.WorkerQueue;
+import org.enilu.socket.v3.server.threadpool.TaskQueue;
+import org.enilu.socket.v3.server.threadpool.task.ShutdownTask;
 
 public class Deamon implements Runnable {
 	private static Logger logger = Logger.getLogger(Deamon.class.getName());
@@ -85,8 +85,8 @@ public class Deamon implements Runnable {
 											"close client error");
 								}
 							}
-							ShutdownWorker closeWorker = new ShutdownWorker();
-							WorkerQueue.getInstance().push(closeWorker);
+							ShutdownTask closeWorker = new ShutdownTask();
+							TaskQueue.getInstance().push(closeWorker);
 							ServiceEngine.getInstance().shutdown();
 							this.flag = false;
 						}
