@@ -6,7 +6,7 @@ JAVA_HOME="/usr/java/jdk1.7.0_65"
 # 需要启动的Java主程序（main方法类）  
 APP_SERVER_MAINCLASS="org.enilu.socket.v3.server.Main"  
 APP_SHUTDOWNSERVER_MAINCLASS="org.enilu.socket.v3.server.Shutdown"
-  
+APP_NAME="dbserver"
 # 拼凑完整的classpath参数，包括指定lib目录下所有的jar  
 CLASSPATH="."  
 for i in lib/*.jar; do  
@@ -54,43 +54,6 @@ checkpid() {
     fi  
 } 
 
-  
-###################################  
-# (客户端函数)启动程序  
-#  
-# 说明：  
-# 1.首先调用checkpid函数，刷新$psid全局变量  
-# 2.如果程序已经启动（$psid不等于0），则提示程序已启动  
-# 3.如果程序没有被启动，则执行启动命令行  
-# 4.启动命令执行后，再次调用checkpid函数  
-# 5.如果步骤4的结果能够确认程序的pid,则打印[OK]，否则打印[Failed]  
-# 注意:echo -n 表示打印字符后，不换行  
-# 注意:"nohup 某命令 >/dev/null 2>&1 &" 的用法  
-###################################  
-startclient() {  
-    #checkpid  
-    if [ $psid -ne 0 ]; then  
-        #echo "================================"  
-        #echo "warn: $APP_MAINCLASS already started! (pid=$psid)"  
-        #echo "================================"  
-        echo ""
-    else  
-        #echo -n "Starting $APP_MAINCLASS ..."  
-        #nohup java $JAVA_OPTS -classpath $CLASSPATH "$APP_MAINCLASS" >client.log 2>&1 &
-	  java $JAVA_OPTS -classpath $CLASSPATH "$APP_MAINCLASS"
-        #checkpid  
-        if [ $psid -ne 0 ]; then  
-            #echo "(pid=$psid) [OK]"  
-		echo ""
-        else  
-            #echo "[Failed]"
-		echo ""  
-        fi  
-    fi  
-}  
- 
-
-
 ###################################  
 # (服务器端)启动程序  
 #  
@@ -98,145 +61,58 @@ startclient() {
 # 1.首先调用checkpid函数，刷新$psid全局变量  
 # 2.如果程序已经启动（$psid不等于0），则提示程序已启动  
 # 3.如果程序没有被启动，则执行启动命令行  
-# 4.启动命令执行后，再次调用checkpid函数  
-# 5.如果步骤4的结果能够确认程序的pid,则打印[OK]，否则打印[Failed]  
-# 注意:echo -n 表示打印字符后，不换行  
-# 注意:"nohup 某命令 >/dev/null 2>&1 &" 的用法  
 ###################################  
-startserver() {  
+startServer() {  
     checkpid  
-    if [ $psid -ne 0 ]; then  
-        #echo "================================"  
-        #echo "warn: $APP_MAINCLASS already started! (pid=$psid)"  
-	  #echo "================================"  
-        echo ""
+    if [ $psid -ne 0 ]; then          
+        echo "warn: $APP_NAME already started! (pid=$psid)"  
     else  
-        #echo -n "Starting $APP_SERVER_MAINCLASS ..."  
-        #nohup java $JAVA_OPTS -classpath $CLASSPATH "$APP_SERVER_MAINCLASS" >server.log 2>&1 &
 	  java $JAVA_OPTS -classpath $CLASSPATH "$APP_SERVER_MAINCLASS"
-        checkpid  
-        if [ $psid -ne 0 ]; then  
-            #echo "(pid=$psid) [OK]"  
-		echo ""
-        else  
-            #echo "[Failed]"  
-		echo “”
-        fi  
     fi  
 }  
 
 
 ###################################  
-# (服务器端)启动程序  
+# (服务器端)关闭程序  
 #  
 # 说明：  
-# 1.首先调用checkpid函数，刷新$psid全局变量  
-# 2.如果程序已经启动（$psid不等于0），则提示程序已启动  
-# 3.如果程序没有被启动，则执行启动命令行  
-# 4.启动命令执行后，再次调用checkpid函数  
-# 5.如果步骤4的结果能够确认程序的pid,则打印[OK]，否则打印[Failed]  
-# 注意:echo -n 表示打印字符后，不换行  
-# 注意:"nohup 某命令 >/dev/null 2>&1 &" 的用法  
+# 1.调用关闭程序关服务  
 ###################################  
-shutdownServer() {  
-    
-        #echo -n "Starting $APP_SERVER_MAINCLASS ..."  
-        #nohup java $JAVA_OPTS -classpath $CLASSPATH "$APP_SERVER_MAINCLASS" >server.log 2>&1 &
-	  java $JAVA_OPTS -classpath $CLASSPATH "$APP_SHUTDOWNSERVER_MAINCLASS"
-        checkpid  
-        if [ $psid -ne 0 ]; then  
-            #echo "(pid=$psid) [OK]"  
-		echo ""
-        else  
-            #echo "[Failed]"  
-		echo “”
-        fi  
-      
+shutdownServer() {       
+	  java $JAVA_OPTS -classpath $CLASSPATH "$APP_SHUTDOWNSERVER_MAINCLASS"  
+}
+ 
+ 
+###################################  
+# (服务器端)检查程序  
+#  
+# 说明：  
+# 1.调用chkkpid检查进程是否存在  
+###################################  
+chkStatus() {  
+    checkpid  
+    if [ $psid -ne 0 ]; then          
+        echo "^_^：$APP_NAME is running (pid=$psid)"  
+    else  
+	  	  echo "囧：$APP_NAME is not running"  
+    fi  
 } 
-
-###################################  
-#(函数)停止程序  
-#  
-#说明：  
-# 1.首先调用checkpid函数，刷新$psid全局变量  
-# 2.如果程序已经启动（$psid不等于0），则开始执行停止，否则，提示程序未运行  
-# 3.使用kill -9 pid命令进行强制杀死进程  
-# 4.执行kill命令行紧接其后，马上查看上一句命令的返回值: $?  
-# 5.如果步骤4的结果$?等于0,则打印[OK]，否则打印[Failed]  
-# 6.为了防止java程序被启动多次，这里增加反复检查进程，反复杀死的处理（递归调用stop）。  
-#注意:echo -n 表示打印字符后，不换行  
-#注意:在shell编程中，"$?" 表示上一句命令或者一个函数的返回值  
-###################################  
-stop() {  
-    checkpid  
-    if [ $psid -ne 0 ]; then  
-        echo -n "Stopping $APP_MAINCLASS ...(pid=$psid) "  
-        kill -9 $psid  
-        if [ $? -eq 0 ]; then  
-            echo "[OK]"  
-        else  
-            echo "[Failed]"  
-        fi  
-  
-        checkpid  
-        if [ $psid -ne 0 ]; then  
-            stop  
-        fi  
-    else  
-        echo "================================"  
-        echo "warn: $APP_MAINCLASS is not running"  
-        echo "================================"  
-    fi  
-}  
-  
-###################################  
-#(函数)堆转储快照  
-#  
-#说明：  
-# 1.首先调用checkpid函数，刷新$psid全局变量  
-# 2.如果程序已经启动（$psid不等于0），则开始执行jmap，否则，提示程序未运行  
-#注意:echo -n 表示打印字符后，不换行  
-#注意:在shell编程中，"$?" 表示上一句命令或者一个函数的返回值  
-###################################  
-dump() {  
-    checkpid  
-    if [ $psid -ne 0 ]; then  
-        echo -n "Dumping $APP_MAINCLASS ...(pid=$psid) "  
-        jmap -dump:live,format=b,file=heep.bin $psid  
-    else  
-        echo "================================"  
-        echo "warn: $APP_MAINCLASS is not running"  
-        echo "================================"  
-    fi  
-}  
-  
 ###################################  
 #读取脚本的第一个参数($1)，进行判断  
 ###################################  
 case $1 in  
-startclient)   
-    startclient  
+start)   
+    startServer  
     ;;
-
-startserver)   
-    startserver  
-    ;;
-shutdownserver)  
-    echo "stop project......"  
+shutdown)  
     shutdownServer  
-    ;;
-stop)  
-    echo "stop project......"  
-    stop  
-    ;;  
+    ;; 
 restart)  
-    echo "restart project......"  
-    stop  
-    start  
+    shutdownServer  
+    startserver  
     ;;  
-dump)  
-    echo "dump project......"  
-    dump  
+status)  
+    chkStatus  
     ;;  
 *)  
 esac  

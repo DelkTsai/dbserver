@@ -1,5 +1,5 @@
 #!/bin/bash  
 
 #停止数据库服务
-./dbserver.sh shutdownserver
+./dbserver.sh shutdown
        

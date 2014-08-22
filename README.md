@@ -5,8 +5,8 @@ dbserver 文档数据库
 主要技术：
 -----------------
 	1，socket通信，socket通信使用java NIO来实现
-	2，BSON，服务器端与客户端的的通信使用BSON来封装数据。
-	3，java线程池，自己依照java线程池框架Exector实现了简单的线程池功能，用来在服务器端处理客户端的并发请求。
+	2，BSON，服务器端与客户端的的通信使用BSON来封装数据
+	3，java线程池，依照java线程池框架Exector实现了简单的线程池功能
 	4，实现了简单的通信协议：
 		4.1，所有的消息包括消息头和消息体两部分：
 		4.2，消息头协议为：
@@ -24,21 +24,20 @@ dbserver 文档数据库
 		1.1，其中：lib存放程序运行时依赖的相关jar和程序本身的jar包
 		1.2，程序自身的jar包由源代码打包
 	2，程序运行命令(linux)：
-		2.1，./start.sh 启动服务器端
-		2.2，./client.sh 启动客户端
-		2.3，./shutdown.sh 停止服务端
-	3,windows运行方法：
-		3.1，将项目导入到eclipse后，运行 org.enilu.socket.v3.server.Main启动服务端
-		3.2,，运行org.enilu.socket.v3.client.Main启动客户端
-			3.2.1，在客户端控制台输入connect ip port 连接服务端
-			3.2.2，连接成功后，分别使用insert/delete/update/query {key:value,key:value...}对数据库进行增删改查,
-					例如查询id为1的数据：query {id:1} 
+		2.1，./start.sh or start.bat 启动服务器端
+		2.2，./client.sh or client.bat启动客户端
+			2.2.1，在客户端控制台输入connect ip port 连接服务端
+			2.2.2，连接成功后，分别使用insert/delete/update/query {key:value,key:value...}
+				   对数据库进行增删改查,例如查询id为1的数据：query {id:1}
+		2.3，./shutdown.sh or shutdown.bat停止服务端
+		 
+				   
  
 文档下载
 --------
 --
 交流、反馈和建议
 ---------------
-		QQ：82552623,1070235836,[在这里留言]<http://hi.baidu.com/enilu>
+		QQ：82552623,1070235836,[在这里留言]http://hi.baidu.com/enilu
 
 
