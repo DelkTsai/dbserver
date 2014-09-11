@@ -133,6 +133,8 @@ public class ByteUtil {
 			jsonArray = new JSONArray().fromObject(data);
 		} else if (data.startsWith("[")) {
 			jsonArray = new JSONArray().fromObject(data);
+		} else {
+			jsonArray = new JSONArray().fromObject("[" + data + "]");
 		}
 		Map map = Json2Map(jsonArray.getJSONObject(0));
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -154,7 +156,7 @@ public class ByteUtil {
 		return map;
 	}
 
-	// 将bson数组转换微字符串
+	// 将bson数组转换为字符串
 	public static String byteToJsonString(byte[] b) throws IOException {
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(b);

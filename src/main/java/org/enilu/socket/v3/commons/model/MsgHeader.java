@@ -77,7 +77,6 @@ public class MsgHeader {
 		System.arraycopy(msgLens, 0, bytes, sequences.length, msgLens.length);
 		System.arraycopy(opcodes, 0, bytes, sequences.length + msgLens.length,
 				opcodes.length);
-
 		return bytes;
 
 	}
