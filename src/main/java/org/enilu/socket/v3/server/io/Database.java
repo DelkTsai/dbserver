@@ -19,7 +19,7 @@ public class Database {
 	private Segment[] segs = new Segment[15];
 
 	/** database header start **/
-	private int id = 100;
+	private String id = "DMSH";
 	// page count
 	private int size;
 	// 1:used 0:deleted
@@ -35,33 +35,36 @@ public class Database {
 		this.version = VERSION;
 	}
 
+	public String getId() {
+		return id;
+	}
+
 	public Database(byte[] header) throws IOException {
 		byte[] idbyte = new byte[4];
 		byte[] sizebyte = new byte[4];
 		byte[] flagbyte = new byte[4];
 		byte[] versionbyte = new byte[4];
-
 		System.arraycopy(header, 0, idbyte, 0, 4);
 		System.arraycopy(header, 4, sizebyte, 0, 4);
 		System.arraycopy(header, 8, flagbyte, 0, 4);
 		System.arraycopy(header, 12, versionbyte, 0, 4);
-		this.id = ByteUtil.byteToInt(idbyte);
-		this.size = ByteUtil.byteToInt(idbyte);
+		this.id = new String(idbyte);
+		this.size = ByteUtil.byteToInt(sizebyte);
 		this.flag = ByteUtil.byteToInt(flagbyte);
 		this.version = ByteUtil.byteToInt(versionbyte);
 	}
 
 	public byte[] getHeader() throws Exception {
+
 		byte[] ret = new byte[16];
-		byte[] idbyte = ByteUtil.intToByteArray(this.id);
+
 		byte[] sizebyte = ByteUtil.intToByteArray(this.size);
 		byte[] flagbyte = ByteUtil.intToByteArray(this.flag);
 		byte[] versionbyte = ByteUtil.intToByteArray(this.version);
-		System.arraycopy(idbyte, 0, ret, 0, idbyte.length);
-		System.arraycopy(sizebyte, 0, ret, idbyte.length, sizebyte.length);
-		System.arraycopy(flagbyte, 0, ret, idbyte.length + sizebyte.length,
-				flagbyte.length);
-		System.arraycopy(versionbyte, 0, ret, idbyte.length + sizebyte.length
+		System.arraycopy(id.getBytes(), 0, ret, 0, 4);
+		System.arraycopy(sizebyte, 0, ret, 4, sizebyte.length);
+		System.arraycopy(flagbyte, 0, ret, 4 + sizebyte.length, flagbyte.length);
+		System.arraycopy(versionbyte, 0, ret, 4 + sizebyte.length
 				+ flagbyte.length, versionbyte.length);
 
 		return ret;

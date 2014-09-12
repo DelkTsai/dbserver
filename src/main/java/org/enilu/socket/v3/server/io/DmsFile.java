@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import org.enilu.socket.v3.commons.util.Constants;
 
 /**
- * 数据库文件在内存中的映射对象
+ * 该类是数据库文件在内存中的映射对象
  * <p/>
  * 2014年9月10日
  * 
@@ -55,17 +55,14 @@ public class DmsFile {
 		logger.log(Level.INFO, "init database file");
 		randomAccessFile = new RandomAccessFile(file, "rw");
 		channel = randomAccessFile.getChannel();
-		// 将数据库头信息写入到文件中
-		ByteBuffer dmsHeader = ByteBuffer.allocate(16);
-		db = new Database();
-		dmsHeader.put(db.getHeader(), 0, 16);
-		dmsHeader.flip();
-		channel.write(dmsHeader, 0);
-		/**
-		 * 通过在文件指定位置写入一个空字符占位来指定初始化文件大小
-		 */
+		// 创建一个128mb的数据库文件
 		ByteBuffer buff = ByteBuffer.allocate(1);
 		channel.write(buff, Segment.size - 1);
+		size = channel.size();
+		// 将数据库头信息写入到数据库文件中
+		db = new Database();
+		mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, Segment.size);
+		mmap.put(db.getHeader(), 0, 16);
 	}
 
 }
