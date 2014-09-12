@@ -39,24 +39,46 @@ public class Database {
 		return id;
 	}
 
-	public Database(byte[] header) throws IOException {
+	public Database(byte[] bytes) throws IOException {
+		byte[] dmsHeader = new byte[Dms.DMS_FILE_HEADER_SIZE];
+		System.arraycopy(bytes, 0, dmsHeader, 0, Dms.DMS_FILE_HEADER_SIZE);
 		byte[] idbyte = new byte[4];
 		byte[] sizebyte = new byte[4];
 		byte[] flagbyte = new byte[4];
 		byte[] versionbyte = new byte[4];
-		System.arraycopy(header, 0, idbyte, 0, 4);
-		System.arraycopy(header, 4, sizebyte, 0, 4);
-		System.arraycopy(header, 8, flagbyte, 0, 4);
-		System.arraycopy(header, 12, versionbyte, 0, 4);
+		System.arraycopy(dmsHeader, 0, idbyte, 0, 4);
+		System.arraycopy(dmsHeader, 4, sizebyte, 0, 4);
+		System.arraycopy(dmsHeader, 8, flagbyte, 0, 4);
+		System.arraycopy(dmsHeader, 12, versionbyte, 0, 4);
 		this.id = new String(idbyte);
 		this.size = ByteUtil.byteToInt(sizebyte);
 		this.flag = ByteUtil.byteToInt(flagbyte);
 		this.version = ByteUtil.byteToInt(versionbyte);
+
+		loadSegment(bytes);
+	}
+
+	/**
+	 * 将数据库文件映射为Segment
+	 * 
+	 * @param bytes
+	 */
+	private void loadSegment(byte[] bytes) {
+		int segmentCount = (bytes.length - Dms.DMS_FILE_HEADER_SIZE)
+				/ Dms.DMS_FILE_SEGMENT_SIZE;
+
+		byte[] segmentbyte = new byte[bytes.length - Dms.DMS_FILE_HEADER_SIZE];
+		for (int i = 0; i < segmentCount; i++) {
+			System.arraycopy(bytes, Dms.DMS_FILE_HEADER_SIZE + i
+					* Dms.DMS_FILE_SEGMENT_SIZE, segmentbyte, 0,
+					Dms.DMS_FILE_SEGMENT_SIZE);
+			segs[i] = new Segment(bytes);
+		}
 	}
 
 	public byte[] getHeader() throws Exception {
 
-		byte[] ret = new byte[16];
+		byte[] ret = new byte[Dms.DMS_FILE_HEADER_SIZE];
 
 		byte[] sizebyte = ByteUtil.intToByteArray(this.size);
 		byte[] flagbyte = ByteUtil.intToByteArray(this.flag);

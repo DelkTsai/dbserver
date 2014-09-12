@@ -23,7 +23,7 @@ public class DmsFile {
 	private String filename = "/media/data/dms.db";
 	private File file;
 	private FileChannel channel;
-	private long size;
+	private int size;
 	private MappedByteBuffer mmap;
 	private RandomAccessFile randomAccessFile;
 	private Database db;
@@ -43,12 +43,22 @@ public class DmsFile {
 		logger.log(Level.INFO, "load file to memory");
 		randomAccessFile = new RandomAccessFile(file, "rw");
 		channel = this.randomAccessFile.getChannel();
-		size = channel.size();
+		size = (int) channel.size();
 		mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, size);
-		byte[] header = new byte[16];
-		mmap.get(header, 0, 16);
-		Database db = new Database(header);
+		byte[] bytes = new byte[size];
+		mmap.get(bytes, 0, size);
+
+		db = new Database(bytes);
+
+		// byte[] dmsHeader = new byte[Dms.DMS_FILE_HEADER_SIZE];
+		// System.arraycopy(bytes, 0, dmsHeader, 0, Dms.DMS_FILE_HEADER_SIZE);
+		// Database db = new Database(bytes);
+		// byte[] pageHeader = new byte[Page.HEAD_SIZE];
+		// System.arraycopy(bytes, Dms.DMS_FILE_HEADER_SIZE, pageHeader, 0,
+		// Page.HEAD_SIZE);
+		// Page page = new Page(pageHeader);
 		logger.log(Level.INFO, "database header:" + db.toString());
+		// logger.log(Level.INFO, "page header:" + page.toString());
 	}
 
 	private void init() throws Exception {
@@ -57,12 +67,18 @@ public class DmsFile {
 		channel = randomAccessFile.getChannel();
 		// 创建一个128mb的数据库文件
 		ByteBuffer buff = ByteBuffer.allocate(1);
-		channel.write(buff, Segment.size - 1);
-		size = channel.size();
+		channel.write(buff, Dms.DMS_FILE_SEGMENT_SIZE
+				+ Dms.DMS_FILE_HEADER_SIZE - 1);
+		size = (int) channel.size();
 		// 将数据库头信息写入到数据库文件中
 		db = new Database();
-		mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, Segment.size);
-		mmap.put(db.getHeader(), 0, 16);
+		mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0,
+				Dms.DMS_FILE_SEGMENT_SIZE);
+		byte[] bytes = new byte[Dms.DMS_FILE_HEADER_SIZE + Page.HEAD_SIZE];
+		System.arraycopy(db.getHeader(), 0, bytes, 0, Dms.DMS_FILE_HEADER_SIZE);
+		System.arraycopy(new Page().getHeader(), 0, bytes,
+				Dms.DMS_FILE_HEADER_SIZE, Page.HEAD_SIZE);
+		mmap.put(bytes, 0, Dms.DMS_FILE_HEADER_SIZE + Page.HEAD_SIZE);
 	}
 
 }

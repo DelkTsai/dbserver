@@ -9,12 +9,16 @@ package org.enilu.socket.v3.server.io;
  */
 public class Segment {
 	/**
-	 * the capacity of a segment is 128mb=134217728bytes
-	 */
-	public static int size = 134217728;//
-	/**
 	 * a segment contains 32 pages
 	 */
 	private Page[] pages = new Page[32];
+
+	public Segment(byte[] bytes) {
+
+	}
+
+	public Segment() {
+		super();
+	}
 
 }
