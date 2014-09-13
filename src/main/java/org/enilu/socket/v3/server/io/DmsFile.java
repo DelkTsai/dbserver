@@ -9,6 +9,7 @@ import java.nio.channels.FileChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.enilu.socket.v3.commons.util.ByteUtil;
 import org.enilu.socket.v3.commons.util.Constants;
 
 /**
@@ -19,6 +20,7 @@ import org.enilu.socket.v3.commons.util.Constants;
  * @author enilu(82552623@qq.com)
  */
 public class DmsFile {
+
 	private static Logger logger = Logger.getLogger(DmsFile.class.getName());
 	private String filename = "/media/data/dms.db";
 	private File file;
@@ -27,8 +29,9 @@ public class DmsFile {
 	private MappedByteBuffer mmap;
 	private RandomAccessFile randomAccessFile;
 	private Database db;
+	private static DmsFile instance;
 
-	public DmsFile() throws Exception {
+	private DmsFile() throws Exception {
 		logger.setLevel(Constants.log_level);
 		file = new File(filename);
 		if (file.exists()) {
@@ -39,6 +42,23 @@ public class DmsFile {
 
 	}
 
+	public static DmsFile getInstance() {
+		if (instance == null) {
+			try {
+				instance = new DmsFile();
+			} catch (Exception e) {
+				logger.log(Level.FINE, "初始化存储系统异常");
+				// e.printStackTrace();
+			}
+		}
+		return instance;
+	}
+
+	/**
+	 * 加载数据库文件到内存中
+	 * 
+	 * @throws IOException
+	 */
 	private void loadData() throws IOException {
 		logger.log(Level.INFO, "load file to memory");
 		randomAccessFile = new RandomAccessFile(file, "rw");
@@ -47,20 +67,16 @@ public class DmsFile {
 		mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, size);
 		byte[] bytes = new byte[size];
 		mmap.get(bytes, 0, size);
-
 		db = new Database(bytes);
 
-		// byte[] dmsHeader = new byte[Dms.DMS_FILE_HEADER_SIZE];
-		// System.arraycopy(bytes, 0, dmsHeader, 0, Dms.DMS_FILE_HEADER_SIZE);
-		// Database db = new Database(bytes);
-		// byte[] pageHeader = new byte[Page.HEAD_SIZE];
-		// System.arraycopy(bytes, Dms.DMS_FILE_HEADER_SIZE, pageHeader, 0,
-		// Page.HEAD_SIZE);
-		// Page page = new Page(pageHeader);
 		logger.log(Level.INFO, "database header:" + db.toString());
-		// logger.log(Level.INFO, "page header:" + page.toString());
 	}
 
+	/**
+	 * 初始化数据库文件
+	 * 
+	 * @throws Exception
+	 */
 	private void init() throws Exception {
 		logger.log(Level.INFO, "init database file");
 		randomAccessFile = new RandomAccessFile(file, "rw");
@@ -73,12 +89,81 @@ public class DmsFile {
 		// 将数据库头信息写入到数据库文件中
 		db = new Database();
 		mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0,
-				Dms.DMS_FILE_SEGMENT_SIZE);
-		byte[] bytes = new byte[Dms.DMS_FILE_HEADER_SIZE + Page.HEAD_SIZE];
+				Dms.DMS_FILE_HEADER_SIZE + Dms.DMS_FILE_SEGMENT_SIZE);
+		byte[] bytes = new byte[Dms.DMS_FILE_HEADER_SIZE
+				+ Dms.DMS_FILE_SEGMENT_SIZE];
 		System.arraycopy(db.getHeader(), 0, bytes, 0, Dms.DMS_FILE_HEADER_SIZE);
-		System.arraycopy(new Page().getHeader(), 0, bytes,
-				Dms.DMS_FILE_HEADER_SIZE, Page.HEAD_SIZE);
-		mmap.put(bytes, 0, Dms.DMS_FILE_HEADER_SIZE + Page.HEAD_SIZE);
+		for (int i = 0; i < 32; i++) {
+			byte[] tmp = new Page().getHeader();
+			System.arraycopy(tmp, 0, bytes, Dms.DMS_FILE_HEADER_SIZE + i
+					* Dms.DMS_PAGESIZE, Page.HEAD_SIZE);
+		}
+		mmap.put(bytes);
+	}
+
+	/**
+	 * 扩展segment空间
+	 */
+	private void extendSegment() {
+
+	}
+
+	/**
+	 * 根据需要的空间大小查找可用的Page
+	 * 
+	 * @param requiredSize
+	 * @return
+	 */
+	public Page findPage(int requiredSize) {
+		Segment[] segs = db.getSegments();
+		Page result = null;
+		for (Segment seg : segs) {
+			Page[] pages = seg.getPages();
+			for (Page page : pages) {
+				if (page.getFreeSpace() > requiredSize) {
+					result = page;
+					break;
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 插入一条记录
+	 * 
+	 * @param bson
+	 * @return
+	 */
+	public int insert(byte[] content) {
+		Page page = findPage(content.length + 4);
+		if (page == null) {
+			extendSegment();
+		}
+		int segmentIndex = Integer.valueOf(page.getId().split("-")[0]);
+		int pageIndex = Integer.valueOf(page.getId().split("-")[1]);
+		// 获取record的大小=size大小+content大小
+		// 根据freeoffset，存放record[]，更新freeoffset
+		// 添加slot：获取record位置，存放在最新的slot位置，并更新slotoffset+=4；
+		// 更新slotnum+=1
+		// 更新free space，总大小-head size-（slot num*4）-freeoffset
+
+		byte[] msgLen = ByteUtil.intToByteArray(content.length);
+		byte[] record = new byte[msgLen.length + content.length];
+		System.arraycopy(msgLen, 0, record, 0, msgLen.length);
+		System.arraycopy(content, 0, record, msgLen.length, content.length);
+		int recordOffset = Dms.DMS_FILE_HEADER_SIZE + segmentIndex
+				* Dms.DMS_FILE_SEGMENT_SIZE + Dms.DMS_PAGESIZE * pageIndex
+				+ page.getFreeOffset() - record.length;
+		mmap.put(record, recordOffset, record.length);
+		page.setFreeOffset(page.getFreeOffset() - record.length);
+
+		page.addSlot(ByteUtil.intToByteArray(record.length));
+		page.setSlotOffset(page.getSlotOffset() + 4);
+		page.setNumSlots(page.getNumSlots() + 1);
+		page.setFreeSpace(page.getFreeSpace() - record.length - 4);
+
+		return 0;
 	}
 
 }

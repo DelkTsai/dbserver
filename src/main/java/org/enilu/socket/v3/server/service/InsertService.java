@@ -19,6 +19,7 @@ public class InsertService extends AbstractService {
 
 	@Override
 	public MsgReplay process(MsgSender sender) {
+		int ret = dms.insert(sender.getBytes());
 		MsgReplay msgReplay = new MsgReplay();
 		msgReplay.setHeader(sender.getHeader());
 		msgReplay.setReturnCode(0);

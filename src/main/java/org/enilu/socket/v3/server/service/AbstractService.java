@@ -2,6 +2,7 @@ package org.enilu.socket.v3.server.service;
 
 import org.enilu.socket.v3.commons.model.MsgReplay;
 import org.enilu.socket.v3.commons.model.MsgSender;
+import org.enilu.socket.v3.server.io.DmsFile;
 
 /**
  * 抽象的服务类，负责处理用户请求，并返回相关数据
@@ -13,6 +14,8 @@ import org.enilu.socket.v3.commons.model.MsgSender;
  * 
  */
 public abstract class AbstractService {
+	DmsFile dms = DmsFile.getInstance();
+
 	/**
 	 * 根据传入的参数，从数据库文件系统中获取相应的数据并返回
 	 * 

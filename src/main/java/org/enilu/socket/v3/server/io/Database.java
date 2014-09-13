@@ -54,8 +54,9 @@ public class Database {
 		this.size = ByteUtil.byteToInt(sizebyte);
 		this.flag = ByteUtil.byteToInt(flagbyte);
 		this.version = ByteUtil.byteToInt(versionbyte);
-
-		loadSegment(bytes);
+		byte[] tmp = new byte[bytes.length - Dms.DMS_FILE_HEADER_SIZE];
+		System.arraycopy(bytes, Dms.DMS_FILE_HEADER_SIZE, tmp, 0, tmp.length);
+		loadSegment(tmp);
 	}
 
 	/**
@@ -64,15 +65,13 @@ public class Database {
 	 * @param bytes
 	 */
 	private void loadSegment(byte[] bytes) {
-		int segmentCount = (bytes.length - Dms.DMS_FILE_HEADER_SIZE)
-				/ Dms.DMS_FILE_SEGMENT_SIZE;
+		int segmentCount = bytes.length / Dms.DMS_FILE_SEGMENT_SIZE;
 
-		byte[] segmentbyte = new byte[bytes.length - Dms.DMS_FILE_HEADER_SIZE];
+		byte[] segmentbyte = new byte[Dms.DMS_FILE_SEGMENT_SIZE];
 		for (int i = 0; i < segmentCount; i++) {
-			System.arraycopy(bytes, Dms.DMS_FILE_HEADER_SIZE + i
-					* Dms.DMS_FILE_SEGMENT_SIZE, segmentbyte, 0,
-					Dms.DMS_FILE_SEGMENT_SIZE);
-			segs[i] = new Segment(bytes);
+			System.arraycopy(bytes, i * Dms.DMS_FILE_SEGMENT_SIZE, segmentbyte,
+					0, Dms.DMS_FILE_SEGMENT_SIZE);
+			segs[i] = new Segment(i, segmentbyte);
 		}
 	}
 
@@ -97,6 +96,10 @@ public class Database {
 
 		return "id:" + this.id + "\tflag:" + this.flag + "\tsize:" + this.size
 				+ "\tversion:" + this.version;
+	}
+
+	public Segment[] getSegments() {
+		return segs;
 	}
 
 }

@@ -1,5 +1,7 @@
 package org.enilu.socket.v3.server.io;
 
+import java.util.List;
+
 import org.enilu.socket.v3.commons.util.ByteUtil;
 
 /**
@@ -12,7 +14,7 @@ import org.enilu.socket.v3.commons.util.ByteUtil;
 public class Page {
 	public static final int HEAD_SIZE = 24;
 	/** page header details start: **/
-	private String id = "PAGH";
+	private String id;// segment index-page id
 
 	// flage of page:1:used 0:deleted
 	private int flag;
@@ -21,6 +23,8 @@ public class Page {
 	private int numSlots;
 	private int slotOffset;
 	private int freeOffset;
+	private List<byte[]> slots;// slot集合
+	private List<byte[]> records;// 记录集合
 
 	/** page header details end: **/
 
@@ -54,7 +58,7 @@ public class Page {
 		this.size = Dms.DMS_PAGESIZE;
 		this.numSlots = 0;
 		this.freeSpace = this.size - HEAD_SIZE;
-		this.slotOffset = 20;
+		this.slotOffset = HEAD_SIZE - 1;
 		this.freeOffset = Dms.DMS_PAGESIZE;
 	}
 
@@ -82,6 +86,70 @@ public class Page {
 				+ "\tfreeSpace:" + this.freeSpace + "\tnumSloat:"
 				+ this.numSlots + "\tslotOffset:" + this.slotOffset
 				+ "\tfreeOffset:" + this.freeOffset;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public int getFlag() {
+		return flag;
+	}
+
+	public int getSize() {
+		return size;
+	}
+
+	public int getFreeSpace() {
+		return freeSpace;
+	}
+
+	public int getNumSlots() {
+		return numSlots;
+	}
+
+	public int getSlotOffset() {
+		return slotOffset;
+	}
+
+	public int getFreeOffset() {
+		return freeOffset;
+	}
+
+	public void setFlag(int flag) {
+		this.flag = flag;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
+	}
+
+	public void setFreeSpace(int freeSpace) {
+		this.freeSpace = freeSpace;
+	}
+
+	public void setNumSlots(int numSlots) {
+		this.numSlots = numSlots;
+	}
+
+	public void setSlotOffset(int slotOffset) {
+		this.slotOffset = slotOffset;
+	}
+
+	public void setFreeOffset(int freeOffset) {
+		this.freeOffset = freeOffset;
+	}
+
+	public void addRecord(byte[] record) {
+		this.records.add(record);
+	}
+
+	public void addSlot(byte[] slot) {
+		this.slots.add(slot);
 	}
 
 }
