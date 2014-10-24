@@ -25,11 +25,12 @@ public class Page {
 	private int freeOffset;
 	private List<byte[]> slots;// slot集合
 	private List<byte[]> records;// 记录集合
+	private byte[] pageByte;
 
 	/** page header details end: **/
 
 	public Page(byte[] bytes) {
-
+		this.pageByte = bytes;
 		byte[] flagByte = new byte[4];
 		byte[] sizeByte = new byte[4];
 		byte[] freeSpaceByte = new byte[4];
@@ -150,6 +151,14 @@ public class Page {
 
 	public void addSlot(byte[] slot) {
 		this.slots.add(slot);
+	}
+
+	public byte[] getPageByte() {
+		return pageByte;
+	}
+
+	public void setPageByte(byte[] pageByte) {
+		this.pageByte = pageByte;
 	}
 
 }

@@ -10,7 +10,7 @@ import org.enilu.socket.v3.server.net.Deamon;
  * @author enilu(82552623@qq.com)
  * 
  */
-public class Main {
+public class StartServer {
 
 	/**
 	 * 启动服务器端

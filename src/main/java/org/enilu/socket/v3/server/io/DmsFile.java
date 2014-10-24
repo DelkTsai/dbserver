@@ -22,7 +22,7 @@ import org.enilu.socket.v3.commons.util.Constants;
 public class DmsFile {
 
 	private static Logger logger = Logger.getLogger(DmsFile.class.getName());
-	private String filename = "/media/data/dms.db";
+	private String filename = "/media/enilu/data/dms.db";
 	private File file;
 	private FileChannel channel;
 	private int size;
@@ -118,6 +118,9 @@ public class DmsFile {
 		Segment[] segs = db.getSegments();
 		Page result = null;
 		for (Segment seg : segs) {
+			if (result != null) {
+				break;
+			}
 			Page[] pages = seg.getPages();
 			for (Page page : pages) {
 				if (page.getFreeSpace() > requiredSize) {
@@ -152,17 +155,30 @@ public class DmsFile {
 		byte[] record = new byte[msgLen.length + content.length];
 		System.arraycopy(msgLen, 0, record, 0, msgLen.length);
 		System.arraycopy(content, 0, record, msgLen.length, content.length);
-		int recordOffset = Dms.DMS_FILE_HEADER_SIZE + segmentIndex
-				* Dms.DMS_FILE_SEGMENT_SIZE + Dms.DMS_PAGESIZE * pageIndex
-				+ page.getFreeOffset() - record.length;
-		mmap.put(record, recordOffset, record.length);
-		page.setFreeOffset(page.getFreeOffset() - record.length);
 
-		page.addSlot(ByteUtil.intToByteArray(record.length));
-		page.setSlotOffset(page.getSlotOffset() + 4);
-		page.setNumSlots(page.getNumSlots() + 1);
-		page.setFreeSpace(page.getFreeSpace() - record.length - 4);
+		int slotnumber = page.getNumSlots() + 1;
+		int slotOffset = page.getSlotOffset() + 4;
+		int freeOffset = page.getFreeOffset() - record.length;
+		byte[] pageByte = page.getPageByte();
+		System.arraycopy(ByteUtil.intToByteArray(slotnumber), 0, pageByte, 4, 4);
+		System.arraycopy(ByteUtil.intToByteArray(slotOffset), 0, pageByte, 12,
+				4);
+		System.arraycopy(ByteUtil.intToByteArray(freeOffset), 0, pageByte, 20,
+				4);
+		System.arraycopy(ByteUtil.intToByteArray(record.length), 0, pageByte,
+				Page.HEAD_SIZE + page.getNumSlots() * 4, 4);
+		System.arraycopy(record, 0, pageByte, freeOffset, record.length);
+		int offset = Dms.DMS_FILE_HEADER_SIZE + segmentIndex
+				* Dms.DMS_FILE_SEGMENT_SIZE + Dms.DMS_PAGESIZE * pageIndex;
+		int length = pageByte.length;
+		try {
+			mmap = channel.map(FileChannel.MapMode.READ_WRITE, offset, length);
+			mmap.put(pageByte);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
+		page = new Page(pageByte);
 		return 0;
 	}
 

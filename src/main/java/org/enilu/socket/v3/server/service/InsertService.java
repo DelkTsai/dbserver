@@ -22,8 +22,9 @@ public class InsertService extends AbstractService {
 		int ret = dms.insert(sender.getBytes());
 		MsgReplay msgReplay = new MsgReplay();
 		msgReplay.setHeader(sender.getHeader());
-		msgReplay.setReturnCode(0);
-		msgReplay.setNumReturn(1);
+		msgReplay.setReturnCode(ret);
+		msgReplay.setNumReturn(0);
+
 		String sendmsg = "{id:'1',insert:1}";
 		Map map = new HashMap();
 		map.put("id", 1);

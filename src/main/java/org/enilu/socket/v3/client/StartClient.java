@@ -7,7 +7,7 @@ package org.enilu.socket.v3.client;
  * @author enilu(82552623@qq.com)
  * 
  */
-public class Main {
+public class StartClient {
 	public static void main(String[] args) throws Exception {
 		new Console().start();
 	}
