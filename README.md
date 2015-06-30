@@ -33,6 +33,6 @@
  
 #交流、反馈和建议
 
-* QQ：82552623,1070235836,[在这里留言]http://hi.baidu.com/enilu
+* QQ：82552623,1070235836,[在这里留言]http://blog.csdn.net/mooyinn
 
 
